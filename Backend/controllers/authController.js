@@ -106,3 +106,10 @@ export const login = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+// ================= LOGOUT =================
+export const logout = (req, res) => {
+  res.clearCookie("token");              // login la set pannina cookie name
+  return res.status(200).json({
+    message: "Logged out successfully",
+  });
+};
