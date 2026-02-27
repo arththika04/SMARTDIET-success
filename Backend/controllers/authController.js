@@ -113,3 +113,73 @@ export const logout = (req, res) => {
     message: "Logged out successfully",
   });
 };
+import crypto from "crypto";
+
+// ================= FORGOT PASSWORD =================
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email });
+
+    // Security: same message even if user not found
+    if (!user) {
+      return res.status(200).json({
+        message: "If that email is registered, a reset link has been sent",
+      });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+    await user.save();
+
+    // Final project la: inda resetLink‑a email la anupunga
+    const resetLink = `http://localhost:3000/reset-password?token=${resetToken}&email=${email}`;
+
+    // Ippa dev stage naala response la thiruppi kaamikkiren
+    return res.status(200).json({
+      message: "Password reset link generated",
+      resetLink,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+// ================= RESET PASSWORD =================
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, token, newPassword } = req.body;
+
+    if (!email || !token || !newPassword) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const user = await User.findOne({
+      email,
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }, // token not expired
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashed = await bcrypt.hash(newPassword, salt);
+
+    user.password = hashed;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    return res.status(200).json({ message: "Password reset successful" });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error" });
+  }
+};
