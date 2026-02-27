@@ -5,10 +5,10 @@ import jwt from "jsonwebtoken";
 // ================= REGISTER =================
 export const register = async (req, res) => {
   try {
-    const { username, email, password, confirmPassword, role } = req.body;
+    const { username, email, password, confirmPassword } = req.body;
 
     // 1️⃣ Validate
-    if (!username || !email || !password || !confirmPassword || !role) {
+    if (!username || !email || !password || !confirmPassword) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -26,12 +26,11 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 4️⃣ Create user
+    // 4️⃣ Create user  (role remove; model default = "user")
     const newUser = await User.create({
       username,
       email,
       password: hashedPassword,
-      role,
     });
 
     // 5️⃣ Generate token
@@ -49,10 +48,9 @@ export const register = async (req, res) => {
         id: newUser._id,
         username: newUser.username,
         email: newUser.email,
-        role: newUser.role,
+        role: newUser.role, // here it will be "user" from default
       },
     });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
