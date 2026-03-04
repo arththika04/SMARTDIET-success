@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
-// ✅ Allowed roles (உன் schema enum-க்கு match)
+// ✅ Allowed roles ( schema enum- match)
 const ALLOWED_ROLES = ["user", "dietician", "kitchen", "admin"];
 
 // ================= REGISTER =================
@@ -73,7 +73,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }); 
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
@@ -127,7 +127,7 @@ export const forgotPassword = async (req, res) => {
 
     const user = await User.findOne({ email });
 
-    // ✅ Security: user இல்லையென்றாலும் same message
+    // ✅ Security: user  same message
     if (!user) {
       return res.status(200).json({
         message: "If that email is registered, a reset token has been generated",
@@ -140,7 +140,7 @@ export const forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
     await user.save();
 
-    // ✅ DEV/Test: link வேண்டாம், token மட்டும்
+    // ✅ DEV/Test: link வேண்டாம், token
     return res.status(200).json({
       message: "Password reset token generated",
       token: resetToken,
